@@ -1,6 +1,6 @@
-package com.imolczek.school.banking.loan.calculator;
+package com.imolczek.school.banking.loan.calculator.exceptions;
 
-public class LoanCalculationException extends Exception {
+public class LoanSettingsException extends Exception {
 
 	/**
 	 * 
@@ -15,7 +15,7 @@ public class LoanCalculationException extends Exception {
 	/**
 	 * @param message the message to set
 	 */
-	public LoanCalculationException(String message) {
+	public LoanSettingsException(String message) {
 		this.message = message;
 	}
 

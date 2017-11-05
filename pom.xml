@@ -17,6 +17,15 @@
 	</properties>
 
 	<dependencies>
+		<!-- APPLICATION DEPENDENCIES -->
+		<dependency>
+		    <groupId>com.imolczek.school.banking</groupId>
+		    <artifactId>banking-loan-model</artifactId>
+		    <version>0.0.1-SNAPSHOT</version>
+		    <scope>provided</scope>
+		</dependency>
+
+		<!-- OSGI FRAMEWORK DEPENDENCIES -->
 		<dependency>
 		    <groupId>org.osgi</groupId>
 		    <artifactId>org.osgi.core</artifactId>
@@ -29,6 +38,8 @@
 		    <version>1.3.0</version>
 		    <scope>provided</scope>
 		</dependency>
+
+		<!-- TESTING DEPENDENCIES -->
 		<dependency>
 		    <groupId>junit</groupId>
 		    <artifactId>junit</artifactId>

@@ -1,61 +1,54 @@
 package com.imolczek.school.banking.loan.calculator;
 
 import java.math.BigDecimal;
-import java.text.SimpleDateFormat;
 import java.time.LocalDate;
-import java.time.temporal.ChronoUnit;
-import java.util.Calendar;
+
+import com.imolczek.school.banking.loan.calculator.exceptions.LoanCalculationException;
+import com.imolczek.school.banking.loan.calculator.exceptions.LoanSettingsException;
 
 /**
+ * @author Fabian Bouché
  * A Loan calculator.
  * This calculator only works with monthly installments.
- * @author Fabian Bouché
- *
  */
-public class LoanCalculator {
+public abstract class LoanCalculator {
 
-	/**
-	 * With Lombard calculation, we consider that all months are 30 days long
-	 * Otherwise, we count the exact number of days between installments for interest calculation
-	 */
-	private boolean lombardCalculation;
-	
 	/**
 	 * Annual rate of the loan
 	 * Example: 5% must be provided as 0.05
 	 */
-	private BigDecimal annualRate;
+	protected BigDecimal annualRate;
 	
 	/**
 	 * Number of installments
 	 */
-	private Integer numberOfInstallments;
+	protected Integer numberOfInstallments;
 	
 	/**
 	 * The amount to be borrowed
 	 */
-	private BigDecimal loanAmount;
+	protected BigDecimal loanAmount;
 	
 	/**
 	 * The desired remaining balance at the end of the loan
 	 */
-	private BigDecimal balloon;
+	protected BigDecimal balloon = BigDecimal.ZERO;
 	
 	/**
 	 * The desired monthly installment
 	 */
-	private BigDecimal monthlyInstallment;
+	protected BigDecimal monthlyInstallment;
 
 	/**
 	 * The LocalDate when the loan starts
 	 */
-	private LocalDate loanStartDate;
+	protected LocalDate loanStartDate;
 	
 	/**
 	 * The LocalDate when the first reimbursement will occur
 	 * The day of the month must be between 1 and 28 as all recurring installments will happen on the same day
 	 */
-	private LocalDate firstReimbursementDate;
+	protected LocalDate firstReimbursementDate;
 	
 	public LoanCalculationResult calculateForFixedInstallment() throws LoanSettingsException, LoanCalculationException {
 		// Generic input data validation
@@ -66,38 +59,22 @@ public class LoanCalculator {
 			throw new LoanSettingsException("The desired monthly installment must be set");
 		}
 		
-		LoanCalculationResult result = new LoanCalculationResult();
-		
-		BigDecimal remainingBalance = loanAmount;
-		LocalDate currentDate = loanStartDate;
-		boolean firstIteration = true;
-		while(remainingBalance.compareTo(BigDecimal.ZERO) > 0) {
-			LocalDate nextDate = getNextReimbursementDate(currentDate);
-			long daysOfInterest365 = getNumberOfDays365BetweenDates(currentDate, nextDate);
-			long daysOfInterest366 = getNumberOfDays366BetweenDates(currentDate, nextDate);
-			
-			remainingBalance = remainingBalance.add(getStandardMonthlyInterest(remainingBalance, daysOfInterest365, daysOfInterest366));
-			
-			if (monthlyInstallment.compareTo(remainingBalance) < 0) {
-				remainingBalance = remainingBalance.subtract(monthlyInstallment);
-			} else {
-				remainingBalance = BigDecimal.ZERO;
-			}
-			firstIteration = false;
-		}
-		
-		return result;
+		// Do the calculation according to the selected implementation (daily interests, lombard year...)
+		return doCalculateForFixedInstallment();
 	}
-	
-	protected BigDecimal getStandardMonthlyInterest(BigDecimal remainingBalance, long daysOfInterest365, long daysOfInterest366) {
-		BigDecimal days365 = new BigDecimal(daysOfInterest365);
-		BigDecimal days366 = new BigDecimal(daysOfInterest366);
-		BigDecimal big365 = new BigDecimal(365);
-		BigDecimal big366 = new BigDecimal(366);
-		BigDecimal monthlyInterest = remainingBalance.multiply(BigDecimal.ONE.add(days365.multiply(annualRate.divide(big365)).add(days366.multiply(annualRate.divide(big366)))));
-		return monthlyInterest;
-	}
-	
+		
+	/**
+	 * Do the calculation according to the selected implementation (daily interests, lombard year...)
+	 * @return
+	 * @throws LoanCalculationException
+	 */
+	protected abstract LoanCalculationResult doCalculateForFixedInstallment() throws LoanCalculationException;
+
+	/**
+	 * Determines the date of the next reimbursement
+	 * @param currentDate
+	 * @return
+	 */
 	protected LocalDate getNextReimbursementDate(LocalDate currentDate) {
 		
 		int day;
@@ -125,54 +102,6 @@ public class LoanCalculator {
 		return response;
 	}
 	
-	protected long getNumberOfDays365BetweenDates(LocalDate start, LocalDate end) throws LoanCalculationException {
-		if (start.isAfter(end)) {
-			throw new LoanCalculationException("Start cannot be after end");
-		}
-		if (end.getYear() - start.getYear() > 1) {
-			throw new LoanCalculationException("Case of deferment bigger than 1 year not covered");
-		}
-		long days;
-		if (start.isLeapYear()) {
-			if (end.isLeapYear()) {
-				days = 0;
-			} else {
-				LocalDate startOfNonLeapYear = LocalDate.of(end.getYear(), 1, 1);
-				days = ChronoUnit.DAYS.between(startOfNonLeapYear, end);
-			}
-		} else if (end.isLeapYear()) {
-			LocalDate endOfNonLeapYear = LocalDate.of(start.getYear(), 12, 31);
-			days = ChronoUnit.DAYS.between(start, endOfNonLeapYear);
-		} else {
-			days = ChronoUnit.DAYS.between(start, end);
-		}
-		return days;
-	}
-
-	protected long getNumberOfDays366BetweenDates(LocalDate start, LocalDate end) throws LoanCalculationException {
-		if (start.isAfter(end)) {
-			throw new LoanCalculationException("Start cannot be after end");
-		}
-		if (end.getYear() - start.getYear() > 1) {
-			throw new LoanCalculationException("Case of deferment bigger than 1 year not covered");
-		}
-		long days;
-		if (start.isLeapYear()) {
-			if (end.isLeapYear()) {
-				days = ChronoUnit.DAYS.between(start, end);
-			} else {
-				LocalDate endOfLeapYear = LocalDate.of(start.getYear(), 12, 31);
-				days = ChronoUnit.DAYS.between(start, endOfLeapYear);
-			}
-		} else if (end.isLeapYear()) {
-			LocalDate startOfLeapYear = LocalDate.of(end.getYear(), 1, 1);
-			days = ChronoUnit.DAYS.between(startOfLeapYear, end);
-		} else {
-			days = 0;
-		}
-		return days;
-	}
-
 	/**
 	 * Validate the input data for all calculation cases
 	 * @throws LoanSettingsException
@@ -323,20 +252,5 @@ public class LoanCalculator {
 	public void setFirstReimbursementDate(LocalDate firstReimbursementDate) {
 		this.firstReimbursementDate = firstReimbursementDate;
 	}
-
-	/**
-	 * @return the lombardCalculation
-	 */
-	public boolean isLombardCalculation() {
-		return lombardCalculation;
-	}
-
-	/**
-	 * @param lombardCalculation the lombardCalculation to set
-	 */
-	public void setLombardCalculation(boolean lombardCalculation) {
-		this.lombardCalculation = lombardCalculation;
-	}
-	
 	
 }
