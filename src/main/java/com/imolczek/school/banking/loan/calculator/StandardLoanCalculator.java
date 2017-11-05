@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 
+import com.imolczek.school.banking.loan.calculator.dateutils.LoanDateUtil;
 import com.imolczek.school.banking.loan.calculator.exceptions.LoanCalculationException;
 import com.imolczek.school.banking.loan.model.CashStream;
 
@@ -13,6 +14,8 @@ import com.imolczek.school.banking.loan.model.CashStream;
  */
 public class StandardLoanCalculator extends LoanCalculator {
 
+	private LoanDateUtil dateUtil = new LoanDateUtil();
+	
 	@Override
 	protected LoanCalculationResult doCalculateForFixedInstallment() throws LoanCalculationException {
 		LoanCalculationResult result = new LoanCalculationResult();
@@ -28,26 +31,41 @@ public class StandardLoanCalculator extends LoanCalculator {
 		
 		while(remainingBalance.compareTo(balloon) > 0) {
 			LocalDate nextDate = getNextReimbursementDate(currentDate);
-			long daysOfInterest365 = getNumberOfDays365BetweenDates(currentDate, nextDate);
-			long daysOfInterest366 = getNumberOfDays366BetweenDates(currentDate, nextDate);
+			long daysOfInterest365 = dateUtil.getNumberOfDays365BetweenDates(currentDate, nextDate);
+			long daysOfInterest366 = dateUtil.getNumberOfDays366BetweenDates(currentDate, nextDate);
 			
-			remainingBalance = remainingBalance.add(getInterests(remainingBalance, daysOfInterest365, daysOfInterest366));
+			BigDecimal interest = getInterests(remainingBalance, daysOfInterest365, daysOfInterest366);
+			BigDecimal fees = BigDecimal.ZERO;
+			BigDecimal insuranceCost = BigDecimal.ZERO;
+			
+			remainingBalance = remainingBalance.add(interest);
+			remainingBalance = remainingBalance.add(insuranceCost);
+			remainingBalance = remainingBalance.add(fees);
 			
 			CashStream cashStream = new CashStream();
 			cashStream.setDate(currentDate);
+			cashStream.setInsuranceCost(insuranceCost);
+			cashStream.setFees(fees);
+			cashStream.setInterest(interest);
 
+			BigDecimal principalRepaymentAmount;
 			if (monthlyInstallment.compareTo(remainingBalance.subtract(balloon)) < 0) {
 				remainingBalance = remainingBalance.subtract(monthlyInstallment);
 				cashStream.setAmount(monthlyInstallment);
+				principalRepaymentAmount = monthlyInstallment.subtract(insuranceCost).subtract(interest).subtract(fees);
 			} else {
 				remainingBalance = balloon;
 				cashStream.setAmount(remainingBalance.subtract(balloon));
+				principalRepaymentAmount = remainingBalance.subtract(balloon).subtract(insuranceCost).subtract(interest).subtract(fees);
 			}
-			
+
+			cashStream.setPrincipalRepaymentAmount(principalRepaymentAmount);
+
 			result.getAmortizationSchedule().getCashStreamList().add(cashStream);
 		}
 		
 		result.calculateAPR();
+		result.calculateTotalInterest();
 		
 		return result;
 	}	
@@ -65,70 +83,9 @@ public class StandardLoanCalculator extends LoanCalculator {
 		BigDecimal days366 = new BigDecimal(daysOfInterest366);
 		BigDecimal big365 = new BigDecimal(365);
 		BigDecimal big366 = new BigDecimal(366);
-		BigDecimal interests = remainingBalance.multiply(BigDecimal.ONE.add(days365.multiply(annualRate.divide(big365)).add(days366.multiply(annualRate.divide(big366)))));
+		BigDecimal interests = remainingBalance.multiply(BigDecimal.ONE.add(days365.multiply(annualRate.divide(big365)).add(days366.multiply(annualRate.divide(big366))))).setScale(2, BigDecimal.ROUND_HALF_UP);
 		return interests;
 	}
 	
-	/**
-	 * Determine the number of days in a standard year between both days
-	 * @param start
-	 * @param end
-	 * @return
-	 * @throws LoanCalculationException
-	 */
-	protected long getNumberOfDays365BetweenDates(LocalDate start, LocalDate end) throws LoanCalculationException {
-		if (start.isAfter(end)) {
-			throw new LoanCalculationException("Start cannot be after end");
-		}
-		if (end.getYear() - start.getYear() > 1) {
-			throw new LoanCalculationException("Case of deferment bigger than 1 year not covered");
-		}
-		long days;
-		if (start.isLeapYear()) {
-			if (end.isLeapYear()) {
-				days = 0;
-			} else {
-				LocalDate startOfNonLeapYear = LocalDate.of(end.getYear(), 1, 1);
-				days = ChronoUnit.DAYS.between(startOfNonLeapYear, end);
-			}
-		} else if (end.isLeapYear()) {
-			LocalDate endOfNonLeapYear = LocalDate.of(start.getYear(), 12, 31);
-			days = ChronoUnit.DAYS.between(start, endOfNonLeapYear);
-		} else {
-			days = ChronoUnit.DAYS.between(start, end);
-		}
-		return days;
-	}
-
-	/**
-	 * Determine the number of days in a leap year between both days
-	 * @param start
-	 * @param end
-	 * @return
-	 * @throws LoanCalculationException
-	 */
-	protected long getNumberOfDays366BetweenDates(LocalDate start, LocalDate end) throws LoanCalculationException {
-		if (start.isAfter(end)) {
-			throw new LoanCalculationException("Start cannot be after end");
-		}
-		if (end.getYear() - start.getYear() > 1) {
-			throw new LoanCalculationException("Case of deferment bigger than 1 year not covered");
-		}
-		long days;
-		if (start.isLeapYear()) {
-			if (end.isLeapYear()) {
-				days = ChronoUnit.DAYS.between(start, end);
-			} else {
-				LocalDate endOfLeapYear = LocalDate.of(start.getYear(), 12, 31);
-				days = ChronoUnit.DAYS.between(start, endOfLeapYear);
-			}
-		} else if (end.isLeapYear()) {
-			LocalDate startOfLeapYear = LocalDate.of(end.getYear(), 1, 1);
-			days = ChronoUnit.DAYS.between(startOfLeapYear, end);
-		} else {
-			days = 0;
-		}
-		return days;
-	}
 	
 }
