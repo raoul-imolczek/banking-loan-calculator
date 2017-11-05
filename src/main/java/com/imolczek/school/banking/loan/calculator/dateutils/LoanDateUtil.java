@@ -41,7 +41,7 @@ public class LoanDateUtil {
 			}
 		} else if (end.isLeapYear()) {
 			LocalDate endOfNonLeapYear = LocalDate.of(start.getYear(), 12, 31);
-			days = ChronoUnit.DAYS.between(start, endOfNonLeapYear);
+			days = ChronoUnit.DAYS.between(start, endOfNonLeapYear) + 1;
 		} else {
 			days = ChronoUnit.DAYS.between(start, end);
 		}
@@ -78,7 +78,7 @@ public class LoanDateUtil {
 				days = ChronoUnit.DAYS.between(start, end);
 			} else {
 				LocalDate endOfLeapYear = LocalDate.of(start.getYear(), 12, 31);
-				days = ChronoUnit.DAYS.between(start, endOfLeapYear);
+				days = ChronoUnit.DAYS.between(start, endOfLeapYear) + 1;
 			}
 		} else if (end.isLeapYear()) {
 			LocalDate startOfLeapYear = LocalDate.of(end.getYear(), 1, 1);

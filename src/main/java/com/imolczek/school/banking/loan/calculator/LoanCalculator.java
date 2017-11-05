@@ -162,7 +162,7 @@ public abstract class LoanCalculator {
 	 * @param annualRate the annualRate to set
 	 */
 	public void setAnnualRate(BigDecimal annualRate) {
-		this.annualRate = annualRate;
+		this.annualRate = annualRate.setScale(4, BigDecimal.ROUND_HALF_UP);
 	}
 
 	/**
@@ -190,7 +190,7 @@ public abstract class LoanCalculator {
 	 * @param loanAmount the loanAmount to set
 	 */
 	public void setLoanAmount(BigDecimal loanAmount) {
-		this.loanAmount = loanAmount;
+		this.loanAmount = loanAmount.setScale(2, BigDecimal.ROUND_HALF_UP);
 	}
 
 	/**
@@ -204,7 +204,7 @@ public abstract class LoanCalculator {
 	 * @param balloon the balloon to set
 	 */
 	public void setBalloon(BigDecimal balloon) {
-		this.balloon = balloon;
+		this.balloon = balloon.setScale(2, BigDecimal.ROUND_HALF_UP);
 	}
 
 	/**
@@ -218,7 +218,7 @@ public abstract class LoanCalculator {
 	 * @param monthlyInstallment the monthlyInstallment to set
 	 */
 	public void setMonthlyInstallment(BigDecimal monthlyInstallment) {
-		this.monthlyInstallment = monthlyInstallment;
+		this.monthlyInstallment = monthlyInstallment.setScale(2, BigDecimal.ROUND_HALF_UP);
 	}
 
 

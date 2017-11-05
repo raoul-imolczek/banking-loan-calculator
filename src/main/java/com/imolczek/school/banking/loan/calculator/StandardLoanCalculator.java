@@ -1,8 +1,8 @@
 package com.imolczek.school.banking.loan.calculator;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDate;
-import java.time.temporal.ChronoUnit;
 
 import com.imolczek.school.banking.loan.calculator.dateutils.LoanDateUtil;
 import com.imolczek.school.banking.loan.calculator.exceptions.LoanCalculationException;
@@ -83,7 +83,7 @@ public class StandardLoanCalculator extends LoanCalculator {
 		BigDecimal days366 = new BigDecimal(daysOfInterest366);
 		BigDecimal big365 = new BigDecimal(365);
 		BigDecimal big366 = new BigDecimal(366);
-		BigDecimal interests = remainingBalance.multiply(BigDecimal.ONE.add(days365.multiply(annualRate.divide(big365)).add(days366.multiply(annualRate.divide(big366))))).setScale(2, BigDecimal.ROUND_HALF_UP);
+		BigDecimal interests = remainingBalance.multiply((days365.multiply(annualRate.divide(big365, 4, RoundingMode.HALF_UP)).add(days366.multiply(annualRate.divide(big366, 4, RoundingMode.HALF_UP))))).setScale(2, BigDecimal.ROUND_HALF_UP);
 		return interests;
 	}
 	

@@ -1,6 +1,7 @@
 package com.imolczek.school.banking.loan.calculator;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.util.Iterator;
 
@@ -20,7 +21,7 @@ public class LoanCalculationResult {
 	/**
 	 * The amortizationSchedule of the loan
 	 */
-	private AmortizationSchedule amortizationSchedule;
+	private AmortizationSchedule amortizationSchedule = new AmortizationSchedule();
 	
 	/**
 	 * The APR of the loan
@@ -81,22 +82,22 @@ public class LoanCalculationResult {
 		while (highAPR.compareTo(lowAPR) != 0) {
 			boolean lowerAPR = testAPR(lowAPR, highAPR);
 			if(lowerAPR) {
-				highAPR = lowAPR.add(highAPR.subtract(lowAPR).divide(new BigDecimal("2")));
+				highAPR = lowAPR.add(highAPR.subtract(lowAPR).divide(new BigDecimal("2"), 4, RoundingMode.HALF_UP));
 			} else {
-				lowAPR = lowAPR.add(highAPR.subtract(lowAPR).divide(new BigDecimal("2")));
+				lowAPR = lowAPR.add(highAPR.subtract(lowAPR).divide(new BigDecimal("2"), 4, RoundingMode.HALF_UP));
 			}
 		}
 	}
 
 	private boolean testAPR(BigDecimal lowAPR, BigDecimal highAPR) throws LoanCalculationException {
 		BigDecimal sum = BigDecimal.ZERO;
-		double testAPR = lowAPR.add(highAPR.subtract(lowAPR).divide(new BigDecimal(2))).doubleValue();
+		double testAPR = lowAPR.add(highAPR.subtract(lowAPR).divide(new BigDecimal(2), 4, RoundingMode.HALF_UP)).doubleValue();
 		LocalDate start = amortizationSchedule.getCashStreamList().get(0).getDate();
 		Iterator<CashStream> iterator = amortizationSchedule.getCashStreamList().iterator();
 		while(iterator.hasNext()) {
 			CashStream stream = iterator.next();
-			BigDecimal divisor = new BigDecimal(Math.pow(1 + testAPR, new Double(dateUtil.getNumberOfDays365BetweenDates(start, stream.getDate())) / 365 + new Double(dateUtil.getNumberOfDays366BetweenDates(start, stream.getDate())) / 366));
-			BigDecimal valuatedStream = stream.getAmount().divide(divisor);
+			BigDecimal divisor = new BigDecimal(Math.pow(1 + testAPR, new Double(dateUtil.getNumberOfDays365BetweenDates(start, stream.getDate())) / 365 + new Double(dateUtil.getNumberOfDays366BetweenDates(start, stream.getDate())) / 366)).setScale(2, BigDecimal.ROUND_HALF_UP);
+			BigDecimal valuatedStream = stream.getAmount().divide(divisor, 2, RoundingMode.HALF_UP);
 			sum.add(valuatedStream);
 		}
 		if(sum.signum() < 0) {
