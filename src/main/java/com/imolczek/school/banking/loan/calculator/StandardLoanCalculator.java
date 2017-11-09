@@ -6,6 +6,7 @@ import java.time.LocalDate;
 
 import com.imolczek.school.banking.loan.calculator.dateutils.LoanDateUtil;
 import com.imolczek.school.banking.loan.calculator.exceptions.LoanCalculationException;
+import com.imolczek.school.banking.loan.calculator.model.LoanCalculationResult;
 import com.imolczek.school.banking.loan.model.CashStream;
 
 /**
@@ -27,12 +28,13 @@ public class StandardLoanCalculator extends LoanCalculator {
 		initialCashStream.setAmount(loanAmount.negate());
 		initialCashStream.setDate(loanStartDate);
 		
-		result.getAmortizationSchedule().getCashStreamList().add(initialCashStream );
+		result.getAmortizationSchedule().getCashStreamList().add(initialCashStream);
 		
 		while(remainingBalance.compareTo(balloon) > 0) {
 			LocalDate nextDate = getNextReimbursementDate(currentDate);
 			long daysOfInterest365 = dateUtil.getNumberOfDays365BetweenDates(currentDate, nextDate);
 			long daysOfInterest366 = dateUtil.getNumberOfDays366BetweenDates(currentDate, nextDate);
+			currentDate = nextDate;
 			
 			BigDecimal interest = getInterests(remainingBalance, daysOfInterest365, daysOfInterest366);
 			BigDecimal fees = BigDecimal.ZERO;
@@ -54,9 +56,9 @@ public class StandardLoanCalculator extends LoanCalculator {
 				cashStream.setAmount(monthlyInstallment);
 				principalRepaymentAmount = monthlyInstallment.subtract(insuranceCost).subtract(interest).subtract(fees);
 			} else {
-				remainingBalance = balloon;
 				cashStream.setAmount(remainingBalance.subtract(balloon));
 				principalRepaymentAmount = remainingBalance.subtract(balloon).subtract(insuranceCost).subtract(interest).subtract(fees);
+				remainingBalance = balloon;
 			}
 
 			cashStream.setPrincipalRepaymentAmount(principalRepaymentAmount);
@@ -64,7 +66,9 @@ public class StandardLoanCalculator extends LoanCalculator {
 			result.getAmortizationSchedule().getCashStreamList().add(cashStream);
 		}
 		
-		result.calculateAPR();
+		APRCalculator aprCalculator = new APRCalculator();
+		aprCalculator.calculateAPR(result);
+		
 		result.calculateTotalInterest();
 		
 		return result;

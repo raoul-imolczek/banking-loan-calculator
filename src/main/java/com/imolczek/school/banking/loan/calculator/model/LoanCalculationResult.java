@@ -1,4 +1,4 @@
-package com.imolczek.school.banking.loan.calculator;
+package com.imolczek.school.banking.loan.calculator.model;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -73,38 +73,6 @@ public class LoanCalculationResult {
 	 */
 	public void setApr(BigDecimal apr) {
 		this.apr = apr;
-	}
-
-	public void calculateAPR() throws LoanCalculationException {
-		BigDecimal lowAPR = new BigDecimal("0").setScale(4, BigDecimal.ROUND_HALF_UP);
-		BigDecimal highAPR = new BigDecimal("10").setScale(4, BigDecimal.ROUND_HALF_UP);
-		
-		while (highAPR.compareTo(lowAPR) != 0) {
-			boolean lowerAPR = testAPR(lowAPR, highAPR);
-			if(lowerAPR) {
-				highAPR = lowAPR.add(highAPR.subtract(lowAPR).divide(new BigDecimal("2"), 4, RoundingMode.HALF_UP));
-			} else {
-				lowAPR = lowAPR.add(highAPR.subtract(lowAPR).divide(new BigDecimal("2"), 4, RoundingMode.HALF_UP));
-			}
-		}
-	}
-
-	private boolean testAPR(BigDecimal lowAPR, BigDecimal highAPR) throws LoanCalculationException {
-		BigDecimal sum = BigDecimal.ZERO;
-		double testAPR = lowAPR.add(highAPR.subtract(lowAPR).divide(new BigDecimal(2), 4, RoundingMode.HALF_UP)).doubleValue();
-		LocalDate start = amortizationSchedule.getCashStreamList().get(0).getDate();
-		Iterator<CashStream> iterator = amortizationSchedule.getCashStreamList().iterator();
-		while(iterator.hasNext()) {
-			CashStream stream = iterator.next();
-			BigDecimal divisor = new BigDecimal(Math.pow(1 + testAPR, new Double(dateUtil.getNumberOfDays365BetweenDates(start, stream.getDate())) / 365 + new Double(dateUtil.getNumberOfDays366BetweenDates(start, stream.getDate())) / 366)).setScale(2, BigDecimal.ROUND_HALF_UP);
-			BigDecimal valuatedStream = stream.getAmount().divide(divisor, 2, RoundingMode.HALF_UP);
-			sum.add(valuatedStream);
-		}
-		if(sum.signum() < 0) {
-			return true;
-		} else {
-			return false;
-		}
 	}
 
 	public void calculateTotalInterest() {
