@@ -1,15 +1,14 @@
 package com.imolczek.school.banking.loan.calculator;
 
 import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.util.Iterator;
 
 import com.imolczek.school.banking.loan.calculator.dateutils.LoanDateUtil;
 import com.imolczek.school.banking.loan.calculator.exceptions.LoanCalculationException;
-import com.imolczek.school.banking.loan.calculator.model.LoanCalculationResult;
 import com.imolczek.school.banking.loan.model.AmortizationSchedule;
 import com.imolczek.school.banking.loan.model.CashStream;
+import com.imolczek.school.banking.loan.model.LoanCalculationResult;
 
 public class APRCalculator {
 

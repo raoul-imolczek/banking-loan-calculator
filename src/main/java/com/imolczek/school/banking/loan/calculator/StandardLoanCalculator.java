@@ -6,8 +6,8 @@ import java.time.LocalDate;
 
 import com.imolczek.school.banking.loan.calculator.dateutils.LoanDateUtil;
 import com.imolczek.school.banking.loan.calculator.exceptions.LoanCalculationException;
-import com.imolczek.school.banking.loan.calculator.model.LoanCalculationResult;
 import com.imolczek.school.banking.loan.model.CashStream;
+import com.imolczek.school.banking.loan.model.LoanCalculationResult;
 
 /**
  * @author Fabian Bouché

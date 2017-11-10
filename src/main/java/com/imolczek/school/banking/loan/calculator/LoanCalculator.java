@@ -5,7 +5,7 @@ import java.time.LocalDate;
 
 import com.imolczek.school.banking.loan.calculator.exceptions.LoanCalculationException;
 import com.imolczek.school.banking.loan.calculator.exceptions.LoanSettingsException;
-import com.imolczek.school.banking.loan.calculator.model.LoanCalculationResult;
+import com.imolczek.school.banking.loan.model.LoanCalculationResult;
 
 /**
  * @author Fabian Bouché

@@ -4,7 +4,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 
 import com.imolczek.school.banking.loan.calculator.StandardLoanCalculator;
-import com.imolczek.school.banking.loan.calculator.model.LoanCalculationResult;
+import com.imolczek.school.banking.loan.model.LoanCalculationResult;
 
 import junit.framework.TestCase;
 

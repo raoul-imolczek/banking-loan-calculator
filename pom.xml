@@ -71,6 +71,7 @@
                         <Build-Revision>${buildNumber}</Build-Revision>
                         <Build-Date>${timestamp}</Build-Date>
                         <_include>-bnd.bnd</_include>
+                        <Export-Package>com.imolczek.school.banking.loan.calculator,com.imolczek.school.banking.loan.calculator.exceptions</Export-Package>
                     </instructions>
                 </configuration>
             </plugin>    	
